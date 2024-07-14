@@ -1,16 +1,22 @@
-import React from 'react';
+import { Step, StepLabel, Stepper } from '@mui/material';
 
 const RoutesList = ({ routes }) => {
+  
   return (
-    <div className="routes-list">
-      {routes.map((route, index) => (
-        <div className="flex space-x-4 p-4 bg-gray-900">
+    <div className="routes-list w-full max-w-3xl px-4">
+      {routes.map((route: any, index: number) => (
+        <Stepper >
             {route.map((r, i) => (
-                <div className="flex-1 text-center text-white">
-                    {i == 0 ? r: <div>{ r.destinationAirport + `(${r.airline})`}</div>}
-                </div>
-            ))}
-        </div>
+                <Step key={index + ' ' + i} style={{ margin:"16px"}} >
+                  <>
+                    <StepLabel>
+                      {i == 0 ? r: r.destinationAirport}
+                    </StepLabel>
+                    {r.airline}
+                  </>
+                </Step>
+              ))}
+        </Stepper>
       ))}
     </div>
   );

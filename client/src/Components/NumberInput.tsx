@@ -1,8 +1,13 @@
 import { TextField } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const NumberInput = () => {
-  const [value, setValue] = useState(0);
+type Props = {
+  initialValue: number,
+  onChange: (value: number) => void
+}
+
+const NumberInput = (props: Props) => {
+  const [value, setValue] = useState(props.initialValue);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const intValue = parseInt(e.target.value,  10);
@@ -21,20 +26,26 @@ const NumberInput = () => {
     setValue((prevValue) => (prevValue > 0 ? prevValue - 1 : 0)); // Prevent negative values
   };
 
+  useEffect(() => {
+    props.onChange(value)
+  }, [props, value])
+
   return (
-    <div className="flex items-center border border-gray-300 rounded">
+    <div className="flex items-center border border-blue-300 rounded">
       <TextField
         type="text"
         value={value}
         onChange={handleInputChange}
+        // focused
+        sx={{ input: {color: 'white'}}}
         label="Maximum hops"
         variant="outlined"
-        className="w-40 p-2 text-center border-none focus:outline-none"
+        className="w-40 p-2 text-center border-none focus:outline-none text-white"
       />
       <div className="flex flex-col">
         <button
           onClick={handleIncrement}
-          className="p-1 border-l border-b border-gray-300 focus:outline-none hover:bg-gray-100"
+          className="p-1 border-l border-b border-gray-300 focus:outline-none hover:bg-white-100"
         >
           ▲
         </button>

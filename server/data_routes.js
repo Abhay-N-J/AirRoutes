@@ -4,7 +4,7 @@ const { connectToDatabase } = require("./mongo_redis_connection")
 /**
  * 
  * @param {Db} db 
- * @returns {Promise<Document[]>}
+ * @returns {Promise<any[]>}
  */
 async function getAllRoutes(db = null) {
     if (!db)
@@ -59,7 +59,8 @@ async function getAllAirplanes(db) {
  * @param {String} srcCode 
  * @param {String} dstCode 
  * @param {String} maxHops 
- * @returns {Promise<Document[]>}
+ * @returns {Promise<any[]>}
+ * @deprecated
  */
 async function getRoutes(srcCode, dstCode, maxHops = 3) {
     try {
@@ -172,4 +173,23 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
 }
 
 
-module.exports = { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes }
+/**
+ * @returns {Promise<any[]>}
+ */
+async function getAirports() {
+    const db = connectToDatabase()
+    const airportsCollection = db.collection("airports")
+    const cursor = airportsCollection.find({}).project({ _id: 0, city: 1, country: 1, IATA: 1, ICAO: 1})
+    let airports = []
+    for await (const doc of cursor) {
+        airports.push(doc)
+    }
+    airports = airports.map((airport) => ({
+        ...airport,
+        label: airport.city + ", " + airport.country + ', ' + (airport.IATA == null ? airport.ICAO : airport.IATA)
+    }))
+    return airports
+}
+
+
+module.exports = { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes, getAirports }

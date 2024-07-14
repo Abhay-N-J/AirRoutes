@@ -1,4 +1,4 @@
-const { getRoutes, getAllRoutes, findRoutes } = require('./data_routes');
+const { getRoutes, getAllRoutes, findRoutes, getAirports } = require('./data_routes');
 const { connectToRedis } = require('./mongo_redis_connection');
 
 /**
@@ -53,7 +53,7 @@ async function cachedAllRoutes(bypass = false) {
  */
 async function cachedFindRoutes(srcCode, dstCode, maxHops = 3, bypass = false) {
     const redisClient = await connectToRedis()
-    const cacheKey = `routes_${srcCode}_${dstCode}`
+    const cacheKey = `routes_${srcCode}_${dstCode}_${maxHops}`
     const cacheRoutes = await redisClient.get(cacheKey)
     
     if (!bypass && cacheRoutes) {
@@ -64,6 +64,25 @@ async function cachedFindRoutes(srcCode, dstCode, maxHops = 3, bypass = false) {
         return routes;
     }
 }
+
+/**
+ * 
+ * @returns {Promise<any[]>}
+ */
+async function cachedAirports(bypass = false) {
+    const redisClient = await connectToRedis()
+    const cacheKey = `airports`
+    const cacheAirports = await redisClient.get(cacheKey)
+    
+    if (!bypass && cacheAirports) {
+        return JSON.parse(cacheAirports)
+    } else {
+        const airports = await getAirports();
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(airports));
+        return airports;
+    }
+}
+
 
 /**
  * 
@@ -87,4 +106,4 @@ function makeGraph(routes) {
 }
 
 
-module.exports = { cachedRoutes, cachedAllRoutes, cachedFindRoutes }
+module.exports = { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports }
