@@ -1,7 +1,7 @@
-const { mongoose, Schema } = require("mongoose")
+const { mongoose, Schema } = require("mongoose");
+const { cachedAllRoutes } = require("../services/cached_routes");
 
 require('dotenv').config();
-
 
 test('mongoose cache testing', async () => { 
     mongoose.connect(process.env.MONGO_URI)

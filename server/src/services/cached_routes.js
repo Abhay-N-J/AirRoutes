@@ -1,4 +1,4 @@
-import { getRoutes, getAllRoutes, findRoutes, getAirports } from './data_routes.js';
+import { getRoutes, getAllRoutes, findRoutes, getAirports, getAllAirports, getAllAirplanes } from './data_routes.js';
 import { connectToRedis } from '../utils/mongo_redis_connection.js';
 
 /**
@@ -37,7 +37,9 @@ async function cachedAllRoutes(bypass = false) {
         return JSON.parse(cacheRoutes)
     } else {
         const routes = await getAllRoutes();
-        const graph = makeGraph(routes)
+        const airports = await getAllAirports();
+        const airlines = await getAllAirplanes();
+        const graph = makeGraph(routes, airports, airlines)
         await redisClient.setEx(cacheKey, 3600, JSON.stringify(graph));
         return graph;
     }
@@ -67,6 +69,41 @@ async function cachedFindRoutes(srcCode, dstCode, maxHops = 3, bypass = false) {
 
 /**
  * 
+ * @param {WithId<Document>} routes 
+ * @param {Promise<{int: WithId<Document>}} airports
+ * @param {Promise<{int: WithId<Document>}} airplanes
+ * @returns {{}}
+ */
+function makeGraph(routes, airports, airplanes) {
+    let graph = {}
+    routes = routes.map((route, _) => ({
+        ...route,
+        airlineName: airplanes[route.airlineId]?.name,
+        destinationAirportName: airports[route.destinationAirportId]?.city,
+        latitude: airports[route.destinationAirportId]?.latitude,
+        longitude: airports[route.destinationAirportId]?.longitude
+  }))
+    routes.forEach((doc, _) => {
+        if (!graph[doc.sourceAirportId]) {
+            graph[doc.sourceAirportId] = []
+        }
+        graph[doc.sourceAirportId].push({
+            airportId: doc.destinationAirportId,
+            airportCode: doc.destinationAirport,
+            airportName: doc.destinationAirportName,
+            latitude: doc.latitude,
+            longitude: doc.longitude,
+            airline: doc.airline,
+            airlineId: doc.airlineId,
+            airlineName: doc.airlineName,
+            stops: doc.stops,
+        })
+    })
+    return graph
+}
+
+/**
+ * 
  * @returns {Promise<any[]>}
  */
 async function cachedAirports(bypass = false) {
@@ -84,26 +121,7 @@ async function cachedAirports(bypass = false) {
 }
 
 
-/**
- * 
- * @param {Document[]} routes 
- * @returns {{}}
- */
-function makeGraph(routes) {
-    let graph = {}
-    routes.forEach((doc, _) => {
-        if (!graph[doc.sourceAirportId]) {
-            graph[doc.sourceAirportId] = []
-        }
-        graph[doc.sourceAirportId].push({
-            destinationAirportId: doc.destinationAirportId,
-            destinationAirport: doc.destinationAirport,
-            airline: doc.airline,
-            stops: doc.stops,
-        })
-    })
-    return graph
-}
+
 
 
 export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports }

@@ -10,7 +10,17 @@ async function getAllRoutes(db = null) {
     if (!db)
         db = connectToDatabase()
     const coll = db.collection("routes")
-    const cursor = coll.find().project({ _id: 0, airlineId: 0, codeshare: 0, equipment: 0, __v: 0 } )
+    const cursor = coll.find().project({ 
+        _id: 0,  
+        airline: 1,
+        airlineId: 1,
+        sourceAirport: 1,
+        sourceAirportId: 1,
+        destinationAirport: 1,
+        destinationAirportId: 1,
+        stops: 1,
+    })
+    
     var routes = []
     for await (const doc of cursor) {
         routes.push(doc)
@@ -22,16 +32,16 @@ async function getAllRoutes(db = null) {
 /**
  * 
  * @param {Db} db 
- * @returns {{ int: WithId<Document> }}
+ * @returns {Promise<{ int: WithId<Document> }>}
  */
-async function getAllAirports(db) {
+async function getAllAirports(db = null) {
+    if (!db)
+        db = connectToDatabase();
     const coll = db.collection("airports")
     const cursor = coll.find()
     var airports = {}
-    var index = 1
     for await (const doc of cursor) {
-        airports[index++] = doc
-        // console.log(doc);
+        airports[doc.airportId] = doc
     }
     return airports
 }
@@ -40,16 +50,16 @@ async function getAllAirports(db) {
 /**
  * 
  * @param {Db} db 
- * @returns {{ int: WithId<Document> }}
+ * @returns {Promise<{ int: WithId<Document> }>}
  */
-async function getAllAirplanes(db) {
+async function getAllAirplanes(db = null) {
+    if (!db)
+        db = connectToDatabase();
     const coll = db.collection("airlines")
     const cursor = coll.find()
     var planes = {}
-    var index = 1
     for await (const doc of cursor) {
-        planes[index++] = doc
-        // console.log(doc);
+        planes[doc.airlineId] = doc
     }
     return planes
 }
@@ -142,9 +152,22 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
     let result = []
     const src = await getAirportId(srcCode)
     const dst = await getAirportId(dstCode)
-
+    const db = connectToDatabase()
+    const srcInfo = await db.collection("airports").findOne(
+        {airportId: src}, 
+        {projection: 
+            {_id: 0, airportId: 1, city: 1, latitude: 1, longitude: 1}
+        }
+    )
     const bfs = (src, dst, maxHops) => {
-        let queue = [[src, [srcCode], -1]]
+        const srcNode = {
+            airportId: srcInfo?.airportId,
+            airportCode: srcCode,
+            airportName: srcInfo?.city,
+            latitude: srcInfo?.latitude,
+            longitude: srcInfo?.longitude,
+        }
+        let queue = [[src, [srcNode], -1]]
         let visited = new Set()
 
         while (queue.length > 0) {
@@ -162,7 +185,7 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
 
                 if (newHops <= maxHops && !visited.has(neighbor)) {
                     visited.add(neighbor)
-                    queue.push([neighbor.destinationAirportId, [...path, neighbor], newHops])
+                    queue.push([neighbor.airportId, [...path, neighbor], newHops])
                 }
             }
         }
