@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Rest (ExpressJS) server for Air routes",
   "main": "index.js",
+  "type":"module",
   "scripts": {
-    "start": "node index.js",
+    "start": "node src/index.js",
     "test": "jest"
   },
   "author": "",

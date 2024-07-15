@@ -1,5 +1,5 @@
-const { getRoutes, getAllRoutes, findRoutes, getAirports } = require('./data_routes');
-const { connectToRedis } = require('./mongo_redis_connection');
+import { getRoutes, getAllRoutes, findRoutes, getAirports } from './data_routes.js';
+import { connectToRedis } from '../utils/mongo_redis_connection.js';
 
 /**
  * 
@@ -106,4 +106,4 @@ function makeGraph(routes) {
 }
 
 
-module.exports = { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports }
+export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports }

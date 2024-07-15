@@ -1,5 +1,5 @@
-const { Db } = require("mongodb")
-const { connectToDatabase } = require("./mongo_redis_connection")
+import { Db } from "mongodb"
+import { connectToDatabase }  from "../utils/mongo_redis_connection.js"
 
 /**
  * 
@@ -140,8 +140,8 @@ async function getAirportId(code) {
  */
 async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
     let result = []
-    src = await getAirportId(srcCode)
-    dst = await getAirportId(dstCode)
+    const src = await getAirportId(srcCode)
+    const dst = await getAirportId(dstCode)
 
     const bfs = (src, dst, maxHops) => {
         let queue = [[src, [srcCode], -1]]
@@ -192,4 +192,4 @@ async function getAirports() {
 }
 
 
-module.exports = { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes, getAirports }
+export { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes, getAirports }

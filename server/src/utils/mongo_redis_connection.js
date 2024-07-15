@@ -1,9 +1,9 @@
-const { MongoClient, Db } = require('mongodb');
-const { createClient } = require('redis');
-require('dotenv').config();
+import { MongoClient, Db } from 'mongodb';
+import { createClient } from 'redis';
+import { mongo_uri } from '../config/config.js';
 
 
-const client = new MongoClient(process.env.MONGO_URI || 'mongodb://localhost:27017');
+const client = new MongoClient(mongo_uri);
 client.on("error", (err) => console.error("Mongo error", err))
 let db = null;
 
@@ -43,4 +43,4 @@ async function connectToRedis() {
     return redisClient
 }
 
-module.exports = { connectToDatabase, connectToRedis };
+export { connectToDatabase, connectToRedis };

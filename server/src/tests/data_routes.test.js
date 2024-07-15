@@ -1,11 +1,7 @@
-const { default: mongoose, Schema } = require("mongoose");
-const { getAllAirplanes, getAllRoutes, getAllAirports } = require("./data_routes");
-const { MongoClient } = require("mongodb");
+const { mongoose, Schema } = require("mongoose")
 
 require('dotenv').config();
 
-// const client = new MongoClient(process.env.MONGO_URI)
-// const db = client.db()
 
 test('mongoose cache testing', async () => { 
     mongoose.connect(process.env.MONGO_URI)
