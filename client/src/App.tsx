@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { Toaster } from './components/ui/toaster'
 
 import { ThemeProvider as ThemeProvider2, createTheme as createTheme2 } from '@mui/material/styles';
+import MapComponent from './Pages/Map'
 
 const darkTheme = createTheme2({
   palette: {
@@ -31,6 +32,7 @@ function App() {
             <Routes>
               <Route path='/' Component={Home}></Route>
               <Route path='/search' Component={Search}></Route>
+              <Route path='/map' Component={MapComponent}></Route>
             </Routes>
           </Router>
         </QueryClientProvider>

@@ -38,7 +38,16 @@ async function getAllAirports(db = null) {
     if (!db)
         db = connectToDatabase();
     const coll = db.collection("airports")
-    const cursor = coll.find()
+    const cursor = coll.find().project({ 
+        airportId: 1,
+        name: 1,
+        city: 1,
+        country: 1,
+        IATA: 1,
+        ICAO: 1,
+        latitude: 1,
+        longitude: 1,
+    })
     var airports = {}
     for await (const doc of cursor) {
         airports[doc.airportId] = doc

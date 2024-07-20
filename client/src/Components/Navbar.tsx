@@ -26,6 +26,11 @@ const Navbar = () =>{
                         <NavigationMenuLink className={navigationMenuTriggerStyle()} > Search </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem> 
+                    <Link to="/map">
+                        <NavigationMenuLink  className={navigationMenuTriggerStyle()} > Map </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
             </NavigationMenuList>
         </NavigationMenu>
     )

@@ -82,7 +82,7 @@ function makeGraph(routes, airports, airplanes) {
         destinationAirportName: airports[route.destinationAirportId]?.city,
         latitude: airports[route.destinationAirportId]?.latitude,
         longitude: airports[route.destinationAirportId]?.longitude
-  }))
+    }))
     routes.forEach((doc, _) => {
         if (!graph[doc.sourceAirportId]) {
             graph[doc.sourceAirportId] = []
@@ -121,7 +121,26 @@ async function cachedAirports(bypass = false) {
 }
 
 
+/**
+ * 
+ * @returns {Promise<any[]>}
+ */
+async function cachedAllAirports(bypass = false) {
+    const redisClient = await connectToRedis()
+    const cacheKey = `all_airports`
+    const cacheAirports = await redisClient.get(cacheKey)
+    
+    if (!bypass && cacheAirports) {
+        return JSON.parse(cacheAirports)
+    } else {
+        const airports = await getAllAirports();
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(airports));
+        return airports;
+    }
+}
 
 
 
-export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports }
+
+
+export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports, cachedAllAirports }

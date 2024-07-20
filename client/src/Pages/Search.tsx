@@ -7,6 +7,7 @@ import RoutesTable from "../Components/RoutesTable";
 import { useToast } from "../components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { CircularProgress } from "@mui/material";
+import { Toggle } from "../components/ui/toggle";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL  || "http://localhost:9091"
 
@@ -25,6 +26,7 @@ const Search = () => {
     const [srcValue, setSrcValue] = useState<Airport | null >(null)
     const [dstValue, setDstValue] = useState<Airport | null >(null)
     const [hopValue, setHopValue] = useState<number>(0)
+    const [distanceSort, setDistanceSort] = useState<boolean>(false)
 
     const [routes, setRoutes] = useState<[]>([])
 
@@ -40,8 +42,8 @@ const Search = () => {
         else if (srcValue === dstValue) {
             throw new Error("Wrong input")
         }
-        const res = await axios.get(`/${(srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA)}/${(dstValue?.IATA == null ? dstValue?.ICAO : dstValue.IATA)}/${hopValue}`)
-        return res.data.routes.map((route: any[]) => route[0])
+        const res = await axios.get(`${distanceSort ? "speed": ""}/${(srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA)}/${(dstValue?.IATA == null ? dstValue?.ICAO : dstValue.IATA)}/${hopValue}`)
+        return res.data.routes
     }
 
     const mutation = useMutation({
@@ -77,6 +79,7 @@ const Search = () => {
                 />
                 <NumberInput initialValue={hopValue} onChange={setHopValue}/>
                 <Button variant="destructive" onClick={() => mutation.mutate()}>Search</Button>
+                <Toggle onClick={() => setDistanceSort(!distanceSort)}> Sort By distance </Toggle>
             </div>
 
             <div className="flex flex-col justify-center items-center space-y-8 min-h-screen">

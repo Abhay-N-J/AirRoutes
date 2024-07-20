@@ -14,6 +14,13 @@ app.use(cors())
 // }
 // main()
 
+app.use(async (req, res, next) => {
+    const now = new Date()
+    if (process.env.PROD !== true)
+        console.log("Called: " + req.url + ` at ${now.toUTCString()}`)
+    next()
+})
+
 app.get('/', async (req, res) => {
     res.json({"Home": "Server"})
 })

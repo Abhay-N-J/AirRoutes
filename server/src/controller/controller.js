@@ -1,4 +1,4 @@
-import { cachedAirports, cachedFindRoutes } from "../services/cached_routes.js"
+import { cachedAirports, cachedAllAirports, cachedAllRoutes, cachedFindRoutes } from "../services/cached_routes.js"
 import { calculateDistance } from "../utils/utils.js";
 
 const searchRoutes = async (req, res, next) => {
@@ -8,6 +8,16 @@ const searchRoutes = async (req, res, next) => {
         routes.sort((a, b) => a[1] - b[1])
         res.status(200).json({ routes: routes })
     } catch(err) {
+        next(err)
+    }
+}
+
+const directRoutes = async (req, res, next) => {
+    try {
+        const routes = await cachedAllRoutes()
+        const airports = await cachedAllAirports();
+        res.status(200).json({ routes: routes, airports: airports })
+    } catch (err) {
         next(err)
     }
 }
@@ -46,4 +56,4 @@ const airports = async (req, res, next) => {
     }
 }
 
-export { searchRoutes, airports, searchRoutesWithDistance }
+export { searchRoutes, airports, searchRoutesWithDistance, directRoutes }
