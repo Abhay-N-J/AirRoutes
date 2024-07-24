@@ -1,5 +1,6 @@
 import { Db } from "mongodb"
 import { connectToDatabase }  from "../utils/mongo_redis_connection.js"
+import { calculateDistance } from "../utils/utils.js"
 
 /**
  * 
@@ -176,14 +177,17 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
             latitude: srcInfo?.latitude,
             longitude: srcInfo?.longitude,
         }
-        let queue = [[src, [srcNode], -1]]
+        let prevLat = srcInfo?.latitude
+        let prevLong = srcInfo?.longitude
+        let distance = 0;
+        let queue = [[src, [srcNode], -1, distance]]
         let visited = new Set()
 
         while (queue.length > 0) {
-            let [curr, path, hops] = queue.shift()
+            let [curr, path, hops, dist] = queue.shift()
             if (hops > maxHops) continue
             if (curr === dst) {
-                result.push([path, hops])
+                result.push([path, hops, dist.toFixed(2)])
                 continue
             }
 
@@ -191,10 +195,10 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
 
             for (let neighbor of graph[curr]) {
                 let newHops = hops + 1 + neighbor.stops
-
+                let newDist = dist + calculateDistance(prevLat, prevLong, neighbor.latitude ?? prevLat, neighbor.longitude ?? prevLong)
                 if (newHops <= maxHops && !visited.has(neighbor)) {
                     visited.add(neighbor)
-                    queue.push([neighbor.airportId, [...path, neighbor], newHops])
+                    queue.push([neighbor.airportId, [...path, neighbor], newHops, newDist])
                 }
             }
         }

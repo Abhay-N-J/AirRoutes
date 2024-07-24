@@ -1,21 +1,21 @@
-import * as React from 'react';
-import Autocomplete, { autocompleteClasses } from '@mui/material/Autocomplete';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import ListSubheader from '@mui/material/ListSubheader';
-import Popper from '@mui/material/Popper';
-import { useTheme, styled } from '@mui/material/styles';
-import { VariableSizeList, ListChildComponentProps } from 'react-window';
-import Typography from '@mui/material/Typography';
-import { CircularProgress, TextField } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import * as React from "react";
+import Autocomplete, { autocompleteClasses } from "@mui/material/Autocomplete";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import ListSubheader from "@mui/material/ListSubheader";
+import Popper from "@mui/material/Popper";
+import { useTheme, styled } from "@mui/material/styles";
+import { VariableSizeList, ListChildComponentProps } from "react-window";
+import Typography from "@mui/material/Typography";
+import { CircularProgress, TextField } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 type Props = {
-  queryKey: string,
-  queryFn: () => Promise<any>,
-  getOptionLabel: (option: any) => string,
-  onChange: React.Dispatch<React.SetStateAction<any>>,
-  label: string
+  queryKey: string;
+  queryFn: () => Promise<any>;
+  getOptionLabel: (option: any) => string;
+  onChange: React.Dispatch<React.SetStateAction<any>>;
+  label: string;
 };
 
 const LISTBOX_PADDING = 8; // px
@@ -23,13 +23,13 @@ const LISTBOX_PADDING = 8; // px
 function renderRow(props: ListChildComponentProps) {
   const { data, index, style } = props;
   const dataSet = data[index];
-  
+
   const inlineStyle = {
     ...style,
     top: (style.top as number) + LISTBOX_PADDING,
   };
 
-  if (Object.prototype.hasOwnProperty.call(dataSet, 'group')) {
+  if (Object.prototype.hasOwnProperty.call(dataSet, "group")) {
     return (
       <ListSubheader key={dataSet.key} component="div" style={inlineStyle}>
         {dataSet.group}
@@ -38,9 +38,15 @@ function renderRow(props: ListChildComponentProps) {
   }
 
   const { key, ...optionProps } = dataSet;
-  
+
   return (
-    <Typography key={key} component="li" {...optionProps.props} noWrap style={inlineStyle}>
+    <Typography
+      key={key}
+      component="li"
+      {...optionProps.props}
+      noWrap
+      style={inlineStyle}
+    >
       {`${dataSet.props.children}`}
     </Typography>
   );
@@ -74,17 +80,17 @@ const ListboxComponent = React.forwardRef<
     (item: React.ReactElement & { children?: React.ReactElement[] }) => {
       itemData.push(item);
       itemData.push(...(item.children || []));
-    },
+    }
   );
   const theme = useTheme();
-  const smUp = useMediaQuery(theme.breakpoints.up('sm'), {
+  const smUp = useMediaQuery(theme.breakpoints.up("sm"), {
     noSsr: true,
   });
   const itemCount = itemData.length;
   const itemSize = smUp ? 36 : 48;
 
   const getChildSize = (child: React.ReactElement) => {
-    if (Object.prototype.hasOwnProperty.call(child, 'group')) {
+    if (Object.prototype.hasOwnProperty.call(child, "group")) {
       return 48;
     }
 
@@ -123,8 +129,8 @@ const ListboxComponent = React.forwardRef<
 
 const StyledPopper = styled(Popper)({
   [`& .${autocompleteClasses.listbox}`]: {
-    boxSizing: 'border-box',
-    '& ul': {
+    boxSizing: "border-box",
+    "& ul": {
       padding: 0,
       margin: 0,
     },
@@ -155,25 +161,27 @@ export default function SearchBox(props: Props) {
       PopperComponent={StyledPopper}
       getOptionLabel={props.getOptionLabel}
       onChange={(_, value) => props.onChange(value)}
-      renderInput={(params) => 
+      renderInput={(params) => (
         <TextField
           {...params}
-          className='text-white'
+          className="text-white"
           label={isError ? error.message : props.label}
           disabled={isError}
           // focused
-          sx={{ input: {color: 'white'}}}
+          sx={{ input: { color: "white" } }}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
               <React.Fragment>
-                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                {loading ? (
+                  <CircularProgress color="inherit" size={20} />
+                ) : null}
                 {params.InputProps.endAdornment}
               </React.Fragment>
             ),
           }}
         />
-      }
+      )}
     />
   );
 }

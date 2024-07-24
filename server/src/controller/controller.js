@@ -21,7 +21,13 @@ const directRoutes = async (req, res, next) => {
         next(err)
     }
 }
-
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next
+ * @deprecated 
+ */
 const searchRoutesWithDistance = async (req, res, next) => {
     try {
         const { src, dst, hops } = req.params;

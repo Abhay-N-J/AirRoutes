@@ -1,19 +1,19 @@
-import { TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { TextField } from "@mui/material";
+import { useEffect, useState } from "react";
 
 type Props = {
-  initialValue: number,
-  onChange: (value: number) => void
-}
+  initialValue: number;
+  onChange: (value: number) => void;
+};
 
 const NumberInput = (props: Props) => {
   const [value, setValue] = useState(props.initialValue);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const intValue = parseInt(e.target.value,  10);
+    const intValue = parseInt(e.target.value, 10);
     if (!isNaN(intValue)) {
       setValue(intValue);
-    } else if (e.target.value === '') {
+    } else if (e.target.value === "") {
       setValue(0); // Allow empty input to reset to 0
     }
   };
@@ -27,8 +27,8 @@ const NumberInput = (props: Props) => {
   };
 
   useEffect(() => {
-    props.onChange(value)
-  }, [props, value])
+    props.onChange(value);
+  }, [props, value]);
 
   return (
     <div className="flex items-center border border-blue-300 rounded">
@@ -37,7 +37,7 @@ const NumberInput = (props: Props) => {
         value={value}
         onChange={handleInputChange}
         // focused
-        sx={{ input: {color: 'white'}}}
+        sx={{ input: { color: "white" } }}
         label="Maximum hops"
         variant="outlined"
         className="w-40 p-2 text-center border-none focus:outline-none text-white"

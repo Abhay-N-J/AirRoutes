@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import router from './routes/routes.js';
 import { port } from './config/config.js';
+import { cachedAllRoutes } from './services/cached_routes.js';
 const app = express()
 
 app.use(cors())
@@ -36,3 +37,5 @@ app.use((err, req, res, next) => {
 
 app.listen(port, 
     () => console.log(`Server running on ${port}`))
+
+cachedAllRoutes()
