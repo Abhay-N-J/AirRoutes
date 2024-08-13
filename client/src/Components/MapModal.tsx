@@ -39,10 +39,10 @@ const MapModal = forwardRef<HTMLDivElement, MapModalProps>(({
             ref={ref}
             sx={{
                 position: "relative",
-                height: "70%", // Adjust height
-                width: "50%",  // Adjust width
+                height: "100%", // Adjust height
+                width: "100%",  // Adjust width
                 bgcolor: "background.paper",
-                p: 4,
+                p: 1,
                 borderRadius: 1,
                 overflow: "hidden", 
             }}

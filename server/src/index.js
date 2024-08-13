@@ -6,7 +6,8 @@ import { cachedAllRoutes } from './services/cached_routes.js';
 const app = express()
 
 app.use(cors())
-
+app.use(express.urlencoded({ extended: true}))
+app.use(express.json())
 // async function main() {
 //     const routes = await cachedFindRoutes("AER", "KZN", 5)
 //     for (let route of routes) {
@@ -39,3 +40,4 @@ app.listen(port,
     () => console.log(`Server running on ${port}`))
 
 cachedAllRoutes()
+setInterval(cachedAllRoutes, 360000)

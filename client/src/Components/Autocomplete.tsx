@@ -6,7 +6,7 @@ import Popper from "@mui/material/Popper";
 import { useTheme, styled } from "@mui/material/styles";
 import { VariableSizeList, ListChildComponentProps } from "react-window";
 import Typography from "@mui/material/Typography";
-import { CircularProgress, TextField } from "@mui/material";
+import { CircularProgress, TextField, Tooltip } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -27,6 +27,7 @@ function renderRow(props: ListChildComponentProps) {
   const inlineStyle = {
     ...style,
     top: (style.top as number) + LISTBOX_PADDING,
+    whiteSpace: 'nowrap',
   };
 
   if (Object.prototype.hasOwnProperty.call(dataSet, "group")) {
@@ -40,15 +41,17 @@ function renderRow(props: ListChildComponentProps) {
   const { key, ...optionProps } = dataSet;
 
   return (
-    <Typography
-      key={key}
-      component="li"
-      {...optionProps.props}
-      noWrap
-      style={inlineStyle}
-    >
-      {`${dataSet.props.children}`}
-    </Typography>
+    <Tooltip title={dataSet.props.children} key={key} placement="right">
+      <Typography
+        key={key}
+        component="li"
+        {...optionProps.props}
+        noWrap
+        style={inlineStyle}
+      >
+        {`${dataSet.props.children}`}
+      </Typography>
+    </Tooltip>
   );
 }
 
@@ -107,7 +110,7 @@ const ListboxComponent = React.forwardRef<
   const gridRef = useResetCache(itemCount);
 
   return (
-    <div ref={ref}>
+    <div ref={ref} style={{ overflow: 'auto', maxHeight: getHeight() + 2 * LISTBOX_PADDING}}>
       <OuterElementContext.Provider value={other}>
         <VariableSizeList
           itemData={itemData}
@@ -133,6 +136,7 @@ const StyledPopper = styled(Popper)({
     "& ul": {
       padding: 0,
       margin: 0,
+      display: "block",
     },
   },
 });

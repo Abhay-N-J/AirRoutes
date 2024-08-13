@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import SearchBox from "../Components/Autocomplete";
 import axios from "axios";
 import { Button } from "../components/ui/button";
@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import VariableSizeCheckboxList from "../Components/VariableSizeCheckBoxList"; // Import the new component
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:9091";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
 
 axios.defaults.baseURL = BACKEND_URL;
 
@@ -32,7 +32,6 @@ type Airport = {
 };
 
 const Search = () => {
-  const MAXHOPS = 5;
   const { toast } = useToast();
   const [routes, setRoutes] = useState<[]>([]);
   const [srcValue, setSrcValue] = useState<Airport | null>(null);
@@ -42,30 +41,6 @@ const Search = () => {
   const [airlines, setAirlines] = useState<Map<string, boolean>>(new Map());
   const [airports, setAirports] = useState<Map<string, boolean>>(new Map());
   const [expanded, setExpanded] = useState("false");
-
-  const { computedAirlines, computedAirports } = useMemo(() => {
-    if (routes.length === 0)
-      return { computedAirlines: new Map(), computedAirports: new Map() };
-
-    const airlineNames = new Map();
-    const airportNames = new Map();
-
-    routes.forEach((route: any[]) => {
-      if (route[1] > hopValue) return;
-      route[0].forEach((r: any, i: number) => {
-        if (i !== 0 && i !== route[0].length - 1)
-          airportNames.set(r.airportName, true);
-        if (i !== 0) airlineNames.set(r.airlineName, true);
-      });
-    });
-
-    return { computedAirlines: airlineNames, computedAirports: airportNames };
-  }, [routes, hopValue]);
-
-  useEffect(() => {
-    setAirlines(computedAirlines);
-    setAirports(computedAirports);
-  }, [computedAirlines, computedAirports]);
 
   const fetchAirportData = async () => {
     const res = await axios.get("/airports");
@@ -78,30 +53,28 @@ const Search = () => {
     } else if (srcValue === dstValue) {
       throw new Error("Wrong input");
     }
-    const res = await axios.get(
+    const res = await axios.post(
       `/${srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA}/${
         dstValue?.IATA == null ? dstValue?.ICAO : dstValue.IATA
-      }/${MAXHOPS}`
+      }/${hopValue}`, 
+      {
+        airlines: Object.fromEntries(airlines),
+        airports: Object.fromEntries(airports),
+        sortDist: distanceSort
+      }
     );
 
-    return res.data.routes;
+    return res.data;
   };
 
   const mutation = useMutation({
     mutationFn: fetchRoutes,
-    onSuccess: (data: []) => {
-      setRoutes(data);
-      const airlineNames: Map<string, boolean> = new Map();
-      const airportNames: Map<string, boolean> = new Map();
-      data.forEach((route: [][]) => {
-        route[0].forEach((r: any, i: number) => {
-          if (i != 0 && i != route[0].length - 1)
-            airportNames.set(r.airportName, true);
-          if (i != 0) airlineNames.set(r.airlineName, true);
-        });
-      });
-      setAirlines(airlineNames);
-      setAirports(airportNames);
+    onSuccess: (data) => {
+      setRoutes(data.routes);
+      setAirlines(new Map<string, boolean>(Object.entries(data.airlines)));
+      setAirports(new Map<string, boolean>(Object.entries(data.airports)));
+      console.log(data);
+      
     },
     onError: (error: Error) => {
       toast({
@@ -222,12 +195,12 @@ const Search = () => {
             >
               <Slider
                 value={hopValue}
-                onChange={(_, val) => {
-                  setHopValue(val as number);
-                }}
+                onChange={(_, val) => 
+                  setHopValue(val as number)
+                }
                 step={1}
                 min={0}
-                max={MAXHOPS}
+                max={10}
                 valueLabelDisplay="auto"
                 sx={{ width: 100 }}
               />
@@ -247,7 +220,7 @@ const Search = () => {
             </AccordionSummary>
             <AccordionDetails
               sx={{
-                position: "relative",
+                position: "absolute",
                 backgroundColor: "black",
                 boxShadow: 3,
               }}
@@ -258,9 +231,6 @@ const Search = () => {
                     checked={distanceSort}
                     onChange={(_, checked) => {
                       setDistanceSort(checked);
-                      if (checked)
-                        setRoutes(routes.sort((a, b) => a[2] - b[2]));
-                      else setRoutes(routes.sort((a, b) => a[1] - b[1]));
                     }}
                   />
                 }
@@ -276,9 +246,7 @@ const Search = () => {
         ) : null}
 
         <RoutesTable
-          routes={routes.filter((route) => route[1] <= hopValue)}
-          airlineList={airlines}
-          airportList={airports}
+          routes={routes}
         />
       </div>
     </>

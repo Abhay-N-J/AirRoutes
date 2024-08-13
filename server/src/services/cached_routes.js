@@ -78,27 +78,27 @@ function makeGraph(routes, airports, airplanes) {
     let graph = {}
     routes = routes.map((route, _) => ({
         ...route,
-        airlineName: airplanes[route.airlineId]?.name,
-        destinationAirportName: airports[route.destinationAirportId]?.city,
-        latitude: airports[route.destinationAirportId]?.latitude,
-        longitude: airports[route.destinationAirportId]?.longitude
+        airlineName: airplanes[route.airline]?.name,
+        destinationAirportName: airports[route.destinationAirport]?.name,
+        latitude: airports[route.destinationAirport]?.latitude,
+        longitude: airports[route.destinationAirport]?.longitude
     }))
     routes.forEach((doc, _) => {
-        if (!graph[doc.sourceAirportId]) {
-            graph[doc.sourceAirportId] = []
+        const sourceKey = doc.sourceAirport;
+        if (!graph[sourceKey]) {
+            graph[sourceKey] = []
         }
-        graph[doc.sourceAirportId].push({
-            airportId: doc.destinationAirportId,
+        graph[sourceKey].push({
             airportCode: doc.destinationAirport,
             airportName: doc.destinationAirportName,
             latitude: doc.latitude,
             longitude: doc.longitude,
             airline: doc.airline,
-            airlineId: doc.airlineId,
             airlineName: doc.airlineName,
             stops: doc.stops,
         })
     })
+
     return graph
 }
 

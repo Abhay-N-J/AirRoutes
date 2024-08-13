@@ -24,7 +24,7 @@ const RouteAccordian = (props: {
   const [open, setOpen] = useState(false);
 
   return (
-    <Accordion key={props.index}>
+    <Accordion key={props.index} className="m-4">
       <AccordionSummary>
         <Box
           sx={{
@@ -39,28 +39,45 @@ const RouteAccordian = (props: {
         </Box>
       </AccordionSummary>
       <AccordionDetails onClick={() => setOpen(true)}>
-        <Stepper orientation="vertical">
-          {props.route.map((r, i) => (
-            <Step key={props.index + " " + i} style={{ margin: "16px" }}>
-              <>
-                <StepLabel
-                  icon={
-                    i == 0 || i == props.route.length - 1 ? (
-                      <LocationOn></LocationOn>
-                    ) : (
-                      i
-                    )
-                  }
-                >
-                  {r.airportName +
-                    ", " +
-                    r.airportCode +
-                    (i != 0 ? `(${r.airlineName})` : "")}
-                </StepLabel>
-              </>
-            </Step>
-          ))}
-        </Stepper>
+        <Box sx={{ display: "flex", gap: 15}}>
+          <Box>
+            <Stepper orientation="vertical">
+              {props.route.map((r, i) => (
+                <Step key={props.index + " " + i} style={{ margin: "16px" }}>
+                  <>
+                    <StepLabel
+                      icon={
+                        i == 0 || i == props.route.length - 1 ? (
+                          <LocationOn></LocationOn>
+                        ) : (
+                          i
+                        )
+                      }
+                    >
+                      {r.airportName +
+                        ", " +
+                        r.airportCode +
+                        (i != 0 ? `(${r.airlineName})` : "")}
+                    </StepLabel>
+                  </>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
+          <Box 
+            onClick={(e) => e.stopPropagation()}
+            sx={{
+              width: "700px",
+              height: "400px",
+            }}
+          >
+            <MapModal
+              center={props.coords[0].position}
+              markers={props.coords}
+              zoom={5}
+            />
+          </Box>
+        </Box>
       </AccordionDetails>
       <Modal
         keepMounted={false}
@@ -73,11 +90,18 @@ const RouteAccordian = (props: {
           justifyContent: "center",
         }}
       >
-        <MapModal
-          center={props.coords[0].position}
-          markers={props.coords}
-          zoom={5}
-        />
+        <Box
+          sx={{ 
+            width: "70%",
+            height: "50%"
+          }}
+        >
+          <MapModal
+            center={props.coords[0].position}
+            markers={props.coords}
+            zoom={5}
+          />
+        </Box>
       </Modal>
     </Accordion>
   );
