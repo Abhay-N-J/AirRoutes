@@ -41,3 +41,5 @@ app.listen(port,
 
 cachedAllRoutes()
 setInterval(cachedAllRoutes, 360000)
+
+module.exports = app;
