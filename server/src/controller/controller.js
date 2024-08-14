@@ -33,7 +33,7 @@ const searchRoutes = async (req, res, next) => {
                   popupText: r.airportCode + ", " + r.airportName,
                 });
               if (i != 0 && i != route.length - 1)
-                newAirports.set(r.airportName, true)
+                  newAirports.set(r.airportName, true)
               if (i != 0) {
                 newAirlines.set(r.airlineName, true)
                 airlinesPerRoute.add(r.airlineName);
@@ -59,11 +59,14 @@ const realtimeRoutes = async (req, res, next) => {
         let { airlines, airports, sortDist, date } = req.body;
         airlines = new Map(Object.entries(airlines))
         airports = new Map(Object.entries(airports))
-        const newAirlines = new Map(airlines)
-        const newAirports = new Map(airports)
-        const routesJson = await getRealtimeRoutes(src, dst, date, parseInt(hops))
-        
-        res.status(200).json({ routes: routesJson })
+        const routes = await getRealtimeRoutes(src, dst, date, airlines, airports, parseInt(hops))
+        if (sortDist == "1")
+            routes.sort((a, b) => a[2] - b[2])
+        else if (sortDist == "2")
+            routes.sort((a, b) => a[1] - b[1])
+        else
+            routes.sort((a, b) => a[6] - b[6])
+        res.status(200).json({ routes: routes, airlines: Object.fromEntries(airlines), airports: Object.fromEntries(airports) })
     } catch (err) {
         next(err)
     }

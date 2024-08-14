@@ -11,6 +11,9 @@ const RoutesList = ({ routes }) => {
         const airlines = routeArray[4]
         const coords = routeArray[5]
         const stops = routeArray[1]
+        let total_duration = 0
+        if (routeArray.length == 7)
+            total_duration = routeArray[6]
 
         return (
           <RouteAccordian
@@ -21,6 +24,7 @@ const RoutesList = ({ routes }) => {
             stops={stops}
             airports={airports}
             coords={coords}
+            total_duration={total_duration}
           />
         );
       })}

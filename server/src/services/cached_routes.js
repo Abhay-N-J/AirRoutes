@@ -1,4 +1,4 @@
-import { getRoutes, getAllRoutes, findRoutes, getAirports, getAllAirports, getAllAirplanes } from './data_routes.js';
+import { getRoutes, getAllRoutes, findRoutes, getAirports, getAllAirports, getAllAirplanes, getLatLong } from './data_routes.js';
 import { connectToRedis } from '../utils/mongo_redis_connection.js';
 
 /**
@@ -139,8 +139,26 @@ async function cachedAllAirports(bypass = false) {
     }
 }
 
+/**
+ * @param {boolean} bypass
+ * @returns {Promise<any[]>}
+ */
+async function cachedGetLatLong(bypass = false) {
+    const redisClient = await connectToRedis()
+    const cacheKey = `airport_lat_long`
+    const cacheAirports = await redisClient.get(cacheKey)
+    
+    if (!bypass && cacheAirports) {
+        return JSON.parse(cacheAirports)
+    } else {
+        const airports = await getLatLong()
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(airports))
+        return airports
+    }
+}
 
 
 
 
-export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports, cachedAllAirports }
+
+export { cachedRoutes, cachedAllRoutes, cachedFindRoutes, cachedAirports, cachedAllAirports, cachedGetLatLong }

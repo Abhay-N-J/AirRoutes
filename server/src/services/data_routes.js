@@ -3,6 +3,7 @@ import { connectToDatabase }  from "../utils/mongo_redis_connection.js"
 import { calculateDistance } from "../utils/utils.js"
 import { getJson } from 'serpapi';
 import { serp_api_key } from "../config/config.js";
+import { cachedGetLatLong } from "./cached_routes.js";
 
 /**
  * 
@@ -226,15 +227,32 @@ async function getAirports() {
     return airports
 }
 
+/**
+ * 
+ * @returns {Promise<{}>}
+ */
+async function getLatLong() {
+    const db = connectToDatabase()
+    const airportsCollection = db.collection("airports")
+    const cursor = airportsCollection.find({})
+    let airports = {}
+    for await (const doc of cursor) {
+        airports[doc.IATA ?? doc.ICAO] = doc
+    }
+    return airports
+}
+
 
 /**
  * @param {string} src
  * @param {string} dst
  * @param {string} date
+ * @param {Map} newAirlines
+ * @param {Map} newAirports
  * @param {number} hops
- * @returns {Promise<{}>}
+ * @returns {Promise<[]>}
  */
-async function getRealtimeRoutes(src, dst, date, hops = 1) {
+async function getRealtimeRoutes(src, dst, date, newAirlines, newAirports, hops = 1) {
     const SERP_API_KEY = serp_api_key
     const routesJson = await getJson({
         engine: "google_flights",
@@ -246,28 +264,38 @@ async function getRealtimeRoutes(src, dst, date, hops = 1) {
         type: 2,
         show_hidden: true,
         stops: hops > 2? 0: hops + 1,
-        // exclude_airlines: Array.from(newAirlines.keys()).filter((val) => {
-        //     if (newAirlines.get(val) == false)
-        //         return val;
-        // }).join(","),
-        // exclude_conns:
+        exclude_airlines: Array.from(newAirlines.keys())
+                            .filter((val) => {
+                                return newAirlines.get(val) === false;
+                            })
+                            .map((val) => {
+                                return val.split(" ")[0];
+                            })
+                            .join(','),
+        exclude_conns: Array.from(newAirports.keys())
+                                .filter((val) => {
+                                if (newAirports.get(val) == false)
+                                    return val;
+                                })
+                                .join(","),
     })
     const { best_flights, other_flights } = routesJson 
     const routes = []
-
     async function flightDetails(value, index) {
-        const db = connectToDatabase()
-        const airportsCollection = db.collection("airports")
+        const airportsCollection = await cachedGetLatLong()
         const { flights, layovers, total_duration } = value
         const route = [[]]
         const planes = new Set()
-        const ports = new Set()
+        const ports = []
         let distance = 0
         const map_locs = []
         let i = 0
         for (const v of flights) {
-            const { departure_airport, arrival_airport, airline, duration } = v
-            const departure = await airportsCollection.findOne({ IATA: departure_airport.id })
+            const { departure_airport, arrival_airport, airline, flight_number, duration } = v
+            const departure = {
+                latitude: airportsCollection[departure_airport.id]?.latitude,
+                longitude: airportsCollection[departure_airport.id]?.longitude,
+            }
             if (i == 0) {
                 route[0].push({
                     "airportCode": departure_airport.id,
@@ -280,18 +308,26 @@ async function getRealtimeRoutes(src, dst, date, hops = 1) {
                     position: [departure.latitude, departure.longitude],
                     popupText: departure_airport.name
                 })
+                ports.push(departure_airport.id)
             }
-            if (i != flights.length - 1)
-                ports.add(arrival_airport.id)
-            planes.add(airline)
-            const arrival = await airportsCollection.findOne({ IATA: arrival_airport.id })
+            ports.push(arrival_airport.id)
+            if (i != flights.length - 1) {
+                newAirports.set(arrival_airport.id, true)
+            }
+            planes.add(`${flight_number.split(" ")[0]} ${airline}`)
+            newAirlines.set(`${flight_number.split(" ")[0]} ${airline}`, true)
+            const arrival = {
+                latitude: airportsCollection[arrival_airport.id]?.latitude,
+                longitude: airportsCollection[arrival_airport.id]?.longitude,
+            }
             route[0].push({
                 "airportCode": arrival_airport.id,
                 "airportName": arrival_airport.name,
                 "arrivalTime": arrival_airport.time,
                 "longitude": arrival.latitude,
                 "longitude": arrival.longitude,
-                "airline": airline,
+                "airline": flight_number,
+                "airlineName": airline,
                 "duration": duration,
             })
             map_locs.push({
@@ -301,12 +337,12 @@ async function getRealtimeRoutes(src, dst, date, hops = 1) {
             distance += calculateDistance(departure.latitude, departure.longitude, arrival.latitude, arrival.longitude)
             i++
         }
-        route.push(layovers?.length)
+        route.push(layovers?.length ?? 0)
         route.push(distance.toFixed(2))
-        route.push(total_duration)
         route.push(Array.from(ports))
         route.push(Array.from(planes))
         route.push(map_locs)
+        route.push(total_duration)
         routes.push(route)
     }
     if (best_flights != undefined) {
@@ -319,10 +355,9 @@ async function getRealtimeRoutes(src, dst, date, hops = 1) {
             await flightDetails(value, 0)
         }
     }
-
     return routes
 }
 
 
 
-export { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes, getAirports, getRealtimeRoutes }
+export { getAllRoutes, getAllAirplanes, getAllAirports, getRoutes, findRoutes, getAirports, getRealtimeRoutes, getLatLong }

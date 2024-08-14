@@ -12,6 +12,7 @@ import {
 import LocationOn from "@mui/icons-material/LocationOn";
 import MapModal from "./MapModal";
 import { useState } from "react";
+import { pickersPopperClasses } from "@mui/x-date-pickers/internals";
 
 const RouteAccordian = (props: {
   index: number;
@@ -20,6 +21,7 @@ const RouteAccordian = (props: {
   airlines: Set<string>;
   stops: number;
   coords: { position: [number, number]; popupText: string }[];
+  total_duration: number
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -34,8 +36,9 @@ const RouteAccordian = (props: {
           }}
         >
           <Typography>{Array.from(props.airports).join(", ")}</Typography>
-          <Typography>{Array.from(props.airlines).join(", ")}</Typography>
+          <Typography>{Array.from(props.airlines).map((a, i) => a.split(" ").slice(-1)).join(", ")}</Typography>
           <Typography>{" Stops: " + props.stops}</Typography>
+          {props.total_duration != 0 ? <Typography>{" Total Duration: " + props.total_duration + " mins"}</Typography>: null}
         </Box>
       </AccordionSummary>
       <AccordionDetails onClick={() => setOpen(true)}>
@@ -56,8 +59,10 @@ const RouteAccordian = (props: {
                     >
                       {r.airportName +
                         ", " +
-                        r.airportCode +
-                        (i != 0 ? `(${r.airlineName})` : "")}
+                        r.airportCode + "\n" +
+                        (i != 0 ? `(${r.airlineName})` : "") + "\n" +
+                        (r.departureTime != undefined || r.arrivalTime != undefined ? (i == 0 ? `Departure Time: ${r.departureTime}`: `Arrival Time: ${r.arrivalTime}`): "")
+                      }
                     </StepLabel>
                   </>
                 </Step>

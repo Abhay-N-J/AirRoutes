@@ -1,13 +1,15 @@
 import { MongoClient, Db } from 'mongodb';
 import { createClient } from 'redis';
-import { mongo_uri } from '../config/config.js';
+import { mongo_uri, redis_uri } from '../config/config.js';
 
 
 const client = new MongoClient(mongo_uri);
 client.on("error", (err) => console.error("Mongo error", err))
 let db = null;
 
-const redisClient = createClient()
+const redisClient = createClient({
+    url: redis_uri,
+})
 redisClient.on('error', (err) => console.error("Redis error ", err))
 
 /**

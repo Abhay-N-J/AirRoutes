@@ -32,6 +32,14 @@ const Navbar = () => {
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
+          <Link to="/realtime-search">
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              {" "}
+              Realtime Search{" "}
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
           <Link to="/map">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               {" "}

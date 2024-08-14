@@ -10,6 +10,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Checkbox,
   CircularProgress,
   ClickAwayListener,
   FormControlLabel,
@@ -17,7 +18,11 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import VariableSizeCheckboxList from "../Components/VariableSizeCheckBoxList"; // Import the new component
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
+import VariableSizeCheckboxList from "../Components/VariableSizeCheckBoxList";
+import dayjs, { Dayjs } from "dayjs";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
 
@@ -31,15 +36,16 @@ type Airport = {
   label: string;
 };
 
-const Search = () => {
+const RealtimeSearch = () => {
   const { toast } = useToast();
   const [routes, setRoutes] = useState<[]>([]);
   const [srcValue, setSrcValue] = useState<Airport | null>(null);
   const [dstValue, setDstValue] = useState<Airport | null>(null);
   const [hopValue, setHopValue] = useState<number>(0);
-  const [distanceSort, setDistanceSort] = useState<boolean>(false);
+  const [distanceSort, setDistanceSort] = useState<number>(1);
   const [airlines, setAirlines] = useState<Map<string, boolean>>(new Map());
   const [airports, setAirports] = useState<Map<string, boolean>>(new Map());
+  const [date, setDate] = useState<Dayjs | null>(dayjs())
   const [expanded, setExpanded] = useState("false");
 
   const fetchAirportData = async () => {
@@ -48,19 +54,20 @@ const Search = () => {
   };
 
   const fetchRoutes = async () => {
-    if (srcValue === null || dstValue === null) {
+  if (srcValue === null || dstValue === null) {
       throw new Error("Empty input");
     } else if (srcValue === dstValue) {
       throw new Error("Wrong input");
     }
     const res = await axios.post(
-      `/${srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA}/${
+      `/realtime/${srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA}/${
         dstValue?.IATA == null ? dstValue?.ICAO : dstValue.IATA
       }/${hopValue}`, 
       {
         airlines: Object.fromEntries(airlines),
         airports: Object.fromEntries(airports),
-        sortDist: distanceSort
+        sortDist: distanceSort,
+        date: dayjs(date).format("YYYY-MM-DD"),
       }
     );
 
@@ -100,6 +107,14 @@ const Search = () => {
           getOptionLabel={(option: Airport) => option.label}
           label="Destination"
         />
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker 
+            label="Departure Date (MM/DD/YYYY)"
+            value={date}
+            onChange={(newDate) => setDate(newDate)}
+            disablePast
+          />
+        </LocalizationProvider>
         <Button variant="destructive" onClick={() => mutation.mutate()}>
           Search
         </Button>
@@ -224,15 +239,38 @@ const Search = () => {
               }}
             >
               <FormControlLabel
+              label=""
                 control={
-                  <Switch
-                    checked={distanceSort}
-                    onChange={(_, checked) => {
-                      setDistanceSort(checked);
-                    }}
-                  />
+                  <Box display="flex" flexDirection="column" alignItems="start" gap={1}>
+                    <Box display="flex" alignItems="center">
+                      <Checkbox
+                        checked={distanceSort === 1}
+                        onChange={(_, checked) => {
+                          checked ? setDistanceSort(1) : setDistanceSort(1);
+                        }}
+                      />
+                      <Typography variant="body2">Sort by distance</Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center">
+                      <Checkbox
+                        checked={distanceSort === 2}
+                        onChange={(_, checked) => {
+                          checked ? setDistanceSort(2) : setDistanceSort(1);
+                        }}
+                      />
+                      <Typography variant="body2">Sort by stops</Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center">
+                      <Checkbox
+                        checked={distanceSort === 3}
+                        onChange={(_, checked) => {
+                          checked ? setDistanceSort(3) : setDistanceSort(1);
+                        }}
+                      />
+                      <Typography variant="body2">Sort by duration</Typography>
+                    </Box>
+                  </Box>
                 }
-                label={distanceSort ? "Sorted by distance" : "Sorted by stops"}
               />
             </AccordionDetails>
           </Accordion>
@@ -251,4 +289,4 @@ const Search = () => {
   );
 };
 
-export default Search;
+export default RealtimeSearch;
