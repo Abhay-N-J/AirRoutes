@@ -303,56 +303,60 @@ const Search = () => {
         />
       </div>
       <Box
-          component="footer"
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '10px',
-            backgroundColor: '#f0f0f0',
-            borderTop: '1px solid #ddd',
+        component="footer"
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '10px',
+          backgroundColor: '#000000', // Dark background
+          borderTop: '1px solid #ddd',
+        }}
+      >
+        <IconButton
+          onClick={() => {
+            if (page > 1) {
+              setPage(page - 1);
+              mutation.mutate({
+                airlines: airlines, 
+                airports: airports, 
+                sortDist: distanceSort, 
+                page: page - 1,
+                hops: hopValue,
+              });
+            }
           }}
+          sx={{ color: '#ffffff' }} // Set icon and text color to white
         >
-          <IconButton
-            onClick={() => {
-              if (page > 1) {
-                setPage(page - 1)
-                mutation.mutate({
-                  airlines: airlines, 
-                  airports: airports, 
-                  sortDist: distanceSort, 
-                  page: page - 1,
-                  hops: hopValue,
-                })
-              }
-            }}
-          >
-            <ArrowBackIcon />
-            <Typography variant="caption" sx={{ ml: 1 }}>Previous</Typography>
-          </IconButton>
+          <ArrowBackIcon />
+          <Typography variant="caption" sx={{ ml: 1, color: '#ffffff' }}>Previous</Typography>
+        </IconButton>
 
-          <Box sx={{ flexGrow: 1, textAlign: 'center' }}>
-            <Typography variant="caption">{`Page: ${page} of ${totalPages} pages`}</Typography>
-          </Box>
-
-          <IconButton 
-            onClick={() => {
-              if (page < totalPages) {
-                setPage(page + 1)
-                  mutation.mutate({
-                    airlines: airlines, 
-                    airports: airports, 
-                    sortDist: distanceSort, 
-                    page: page + 1,
-                    hops: hopValue,
-                 })
-              }
-            }}
-          >
-            <Typography variant="caption" sx={{ mr: 1 }}>Next</Typography>
-            <ArrowForwardIcon />
-          </IconButton>
+        <Box sx={{ flexGrow: 1, textAlign: 'center', color: '#ffffff' }}>
+          <Typography variant="caption">{`Page: ${page} of ${totalPages} pages`}</Typography>
         </Box>
+
+        <IconButton 
+          onClick={() => {
+            if (page < totalPages) {
+              setPage(page + 1);
+              mutation.mutate({
+                airlines: airlines, 
+                airports: airports, 
+                sortDist: distanceSort, 
+                page: page + 1,
+                hops: hopValue,
+              });
+            }
+          }}
+          sx={{ color: '#ffffff' }}
+        >
+          <Typography variant="caption" sx={{ mr: 1, color: '#ffffff' }}>Next</Typography>
+          <ArrowForwardIcon />
+        </IconButton>
+      </Box>
+
+
     </>
   );
 };
