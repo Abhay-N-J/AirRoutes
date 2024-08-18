@@ -215,14 +215,14 @@ async function findRoutes(graph, srcCode, dstCode, maxHops = 3) {
 async function getAirports() {
     const db = connectToDatabase()
     const airportsCollection = db.collection("airports")
-    const cursor = airportsCollection.find({}).project({ _id: 0, name: 1, country: 1, IATA: 1, ICAO: 1})
+    const cursor = airportsCollection.find({}).project({ _id: 0, name: 1, country: 1, city: 1, IATA: 1, ICAO: 1})
     let airports = []
     for await (const doc of cursor) {
         airports.push(doc)
     }
     airports = airports.map((airport) => ({
         ...airport,
-        label: (airport.IATA == null ? airport.ICAO : airport.IATA) + ", " + airport.name + ", " + airport.country
+        label: (airport.IATA == null ? airport.ICAO : airport.IATA) + ", " + airport.name + ", " + airport.city + ", " + airport.country
     }))
     return airports
 }
