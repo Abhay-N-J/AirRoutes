@@ -1,13 +1,17 @@
 import { cachedAirports, cachedAllAirports, cachedAllRoutes, cachedFindRoutes } from "../services/cached_routes.js"
 import { getRealtimeRoutes } from "../services/data_routes.js";
+import { connectToRedis } from "../utils/mongo_redis_connection.js";
 import { calculateDistance } from "../utils/utils.js";
+import { createHash } from "crypto"
 
 const searchRoutes = async (req, res, next) => {
     try {
-        const { src, dst, hops } = req.params;
-        let { airlines, airports, sortDist } = req.body;
-        airlines = new Map(Object.entries(airlines))
-        airports = new Map(Object.entries(airports))
+        let { src, dst, hops } = req.params;
+        let { airlines, airports, sortDist, page } = req.query;
+        page = parseInt(page)
+        hops = parseInt(hops)
+        airlines = new Map(Object.entries(JSON.parse(airlines)))
+        airports = new Map(Object.entries(JSON.parse(airports)))
         let routes = await cachedFindRoutes(src, dst, hops)
         const newAirlines = new Map(airlines)
         const newAirports = new Map(airports)
@@ -43,11 +47,17 @@ const searchRoutes = async (req, res, next) => {
             if (!exit)
                 return routeArray
         }) 
-        if (sortDist)
+        if (sortDist == "true")
             routes.sort((a, b) => a[2] - b[2])
         else
             routes.sort((a, b) => a[1] - b[1])
-        res.status(200).json({ routes: routes, airports: Object.fromEntries(newAirports), airlines: Object.fromEntries(newAirlines) })
+        res.status(200).json({ 
+            routes: routes.slice((page - 1) * 10, page * 10), 
+            airports: Object.fromEntries(newAirports), 
+            airlines: Object.fromEntries(newAirlines), 
+            totalPages: Math.ceil(routes.length / 9), 
+            page: page 
+        })
     } catch(err) {
         next(err)
     }
@@ -55,18 +65,39 @@ const searchRoutes = async (req, res, next) => {
 
 const realtimeRoutes = async (req, res, next) => {
     try {
-        const { src, dst, hops } = req.params;
-        let { airlines, airports, sortDist, date } = req.body;
-        airlines = new Map(Object.entries(airlines))
-        airports = new Map(Object.entries(airports))
-        const routes = await getRealtimeRoutes(src, dst, date, airlines, airports, parseInt(hops))
+        let { src, dst, hops } = req.params;
+        let { airlines, airports, sortDist, date, page } = req.body;
+        page = parseInt(page);
+        hops = parseInt(hops)
+        const data = `${src}-${dst}-${hops}-${JSON.stringify(airlines)}-${JSON.stringify(airports)}`;
+        const hash = createHash('sha256').update(data).digest('hex');
+        const redisClient = await connectToRedis()
+        let routes = []
+        if (await redisClient.exists(hash)) {            
+            routes = JSON.parse(await redisClient.get(hash))
+        } else {
+            airlines = new Map(Object.entries(airlines))
+            airports = new Map(Object.entries(airports))
+            
+            const { Newroutes, Newairlines, Newairports } = await getRealtimeRoutes(src, dst, date, airlines, airports, hops)
+            routes = Newroutes
+            await redisClient.setEx(hash, 3600, JSON.stringify(routes))
+            airlines = Object.fromEntries(Newairlines);
+            airports = Object.fromEntries(Newairports);
+        }
         if (sortDist == "1")
             routes.sort((a, b) => a[2] - b[2])
         else if (sortDist == "2")
             routes.sort((a, b) => a[1] - b[1])
         else
             routes.sort((a, b) => a[6] - b[6])
-        res.status(200).json({ routes: routes, airlines: Object.fromEntries(airlines), airports: Object.fromEntries(airports) })
+        res.status(200).json({ 
+            routes:  routes.slice((page - 1) * 10, page * 10), 
+            airlines: airlines, 
+            airports: airports, 
+            totalPages: Math.ceil(routes.length / 9), 
+            page: page 
+        })
     } catch (err) {
         next(err)
     }

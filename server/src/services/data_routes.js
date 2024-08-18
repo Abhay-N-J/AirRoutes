@@ -250,7 +250,7 @@ async function getLatLong() {
  * @param {Map} newAirlines
  * @param {Map} newAirports
  * @param {number} hops
- * @returns {Promise<[]>}
+ * @returns {Promise<{}>}
  */
 async function getRealtimeRoutes(src, dst, date, newAirlines, newAirports, hops = 1) {
     const SERP_API_KEY = serp_api_key
@@ -355,7 +355,11 @@ async function getRealtimeRoutes(src, dst, date, newAirlines, newAirports, hops 
             await flightDetails(value, 0)
         }
     }
-    return routes
+    return {
+        Newroutes: routes, 
+        Newairlines: newAirlines,
+        Newairports: newAirports,
+    }
 }
 
 

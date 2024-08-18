@@ -14,10 +14,12 @@ import {
   CircularProgress,
   ClickAwayListener,
   FormControlLabel,
+  IconButton,
   Slider,
-  Switch,
   Typography,
 } from "@mui/material";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider/LocalizationProvider";
@@ -36,6 +38,14 @@ type Airport = {
   label: string;
 };
 
+interface FetchRoutesParams {
+  airlines: Map<string, boolean>;
+  airports: Map<string, boolean>;
+  sortDist: number;
+  page: number;
+  hops: number;
+}
+
 const RealtimeSearch = () => {
   const { toast } = useToast();
   const [routes, setRoutes] = useState<[]>([]);
@@ -47,13 +57,15 @@ const RealtimeSearch = () => {
   const [airports, setAirports] = useState<Map<string, boolean>>(new Map());
   const [date, setDate] = useState<Dayjs | null>(dayjs())
   const [expanded, setExpanded] = useState("false");
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
   const fetchAirportData = async () => {
     const res = await axios.get("/airports");
     return res.data.airports;
   };
 
-  const fetchRoutes = async () => {
+  const fetchRoutes = async ({ airlines, airports, sortDist, page, hops }: FetchRoutesParams) => {
   if (srcValue === null || dstValue === null) {
       throw new Error("Empty input");
     } else if (srcValue === dstValue) {
@@ -62,12 +74,13 @@ const RealtimeSearch = () => {
     const res = await axios.post(
       `/realtime/${srcValue?.IATA == null ? srcValue?.ICAO : srcValue.IATA}/${
         dstValue?.IATA == null ? dstValue?.ICAO : dstValue.IATA
-      }/${hopValue}`, 
+      }/${hops}`, 
       {
         airlines: Object.fromEntries(airlines),
         airports: Object.fromEntries(airports),
-        sortDist: distanceSort,
+        sortDist: sortDist,
         date: dayjs(date).format("YYYY-MM-DD"),
+        page: page
       }
     );
 
@@ -75,11 +88,15 @@ const RealtimeSearch = () => {
   };
 
   const mutation = useMutation({
-    mutationFn: fetchRoutes,
+    mutationFn: (params: FetchRoutesParams) => fetchRoutes(params),
     onSuccess: (data) => {
       setRoutes(data.routes);
       setAirlines(new Map<string, boolean>(Object.entries(data.airlines)));
       setAirports(new Map<string, boolean>(Object.entries(data.airports)));      
+      setTotalPages(data.totalPages)
+      setPage(data.page)
+      console.log(data.airports);
+      
     },
     onError: (error: Error) => {
       toast({
@@ -115,7 +132,13 @@ const RealtimeSearch = () => {
             disablePast
           />
         </LocalizationProvider>
-        <Button variant="destructive" onClick={() => mutation.mutate()}>
+        <Button variant="destructive" onClick={() => mutation.mutate({
+            airlines: airlines, 
+            airports: airports, 
+            sortDist: distanceSort, 
+            page: page,
+            hops: hopValue,
+          })}>
           Search
         </Button>
       </div>
@@ -153,6 +176,13 @@ const RealtimeSearch = () => {
                   const updatedAirlines = new Map(airlines);
                   updatedAirlines.set(airline, checked);
                   setAirlines(updatedAirlines);
+                  mutation.mutate({
+                    airlines: updatedAirlines, 
+                    airports: airports, 
+                    sortDist: distanceSort, 
+                    page: 1,
+                    hops: hopValue,
+                  })
                 }}
               />
             </AccordionDetails>
@@ -183,6 +213,13 @@ const RealtimeSearch = () => {
                   const updatedAirports = new Map(airports);
                   updatedAirports.set(airport, checked);
                   setAirports(updatedAirports);
+                  mutation.mutate({
+                    airlines: airlines, 
+                    airports: updatedAirports, 
+                    sortDist: distanceSort, 
+                    page: 1,
+                    hops: hopValue,
+                  })
                 }}
               />
             </AccordionDetails>
@@ -208,9 +245,16 @@ const RealtimeSearch = () => {
             >
               <Slider
                 value={hopValue}
-                onChange={(_, val) => 
+                onChange={(_, val) => {
                   setHopValue(val as number)
-                }
+                  mutation.mutate({
+                    airlines: airlines, 
+                    airports: airports, 
+                    sortDist: distanceSort, 
+                    page: 1,
+                    hops: val as number
+                  })
+                }}
                 step={1}
                 min={0}
                 max={10}
@@ -247,6 +291,13 @@ const RealtimeSearch = () => {
                         checked={distanceSort === 1}
                         onChange={(_, checked) => {
                           checked ? setDistanceSort(1) : setDistanceSort(1);
+                          mutation.mutate({
+                            airlines: airlines, 
+                            airports: airports, 
+                            sortDist: checked ? 1 : 1, 
+                            page: 1,
+                            hops: hopValue,
+                          })
                         }}
                       />
                       <Typography variant="body2">Sort by distance</Typography>
@@ -256,6 +307,13 @@ const RealtimeSearch = () => {
                         checked={distanceSort === 2}
                         onChange={(_, checked) => {
                           checked ? setDistanceSort(2) : setDistanceSort(1);
+                          mutation.mutate({
+                            airlines: airlines, 
+                            airports: airports, 
+                            sortDist: checked ? 2: 1, 
+                            page: 1,
+                            hops: hopValue,
+                          })
                         }}
                       />
                       <Typography variant="body2">Sort by stops</Typography>
@@ -265,6 +323,13 @@ const RealtimeSearch = () => {
                         checked={distanceSort === 3}
                         onChange={(_, checked) => {
                           checked ? setDistanceSort(3) : setDistanceSort(1);
+                          mutation.mutate({
+                            airlines: airlines, 
+                            airports: airports, 
+                            sortDist: checked ? 3: 1, 
+                            page: 1,
+                            hops: hopValue,
+                          })
                         }}
                       />
                       <Typography variant="body2">Sort by duration</Typography>
@@ -285,6 +350,57 @@ const RealtimeSearch = () => {
           routes={routes}
         />
       </div>
+      <Box
+          component="footer"
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '10px',
+            backgroundColor: '#f0f0f0',
+            borderTop: '1px solid #ddd',
+          }}
+        >
+          <IconButton
+            onClick={() => {
+              if (page > 1) {
+                setPage(page - 1)
+                mutation.mutate({
+                  airlines: airlines, 
+                  airports: airports, 
+                  sortDist: distanceSort, 
+                  page: page - 1,
+                  hops: hopValue,
+                })
+              }
+            }}
+          >
+            <ArrowBackIcon />
+            <Typography variant="caption" sx={{ ml: 1 }}>Previous</Typography>
+          </IconButton>
+
+          <Box sx={{ flexGrow: 1, textAlign: 'center' }}>
+            <Typography variant="caption">{`Page: ${page} of ${totalPages} pages`}</Typography>
+          </Box>
+
+          <IconButton 
+            onClick={() => {
+              if (page < totalPages) {
+                setPage(page + 1)
+                  mutation.mutate({
+                    airlines: airlines, 
+                    airports: airports, 
+                    sortDist: distanceSort, 
+                    page: page + 1,
+                    hops: hopValue,
+                 })
+              }
+            }}
+          >
+            <Typography variant="caption" sx={{ mr: 1 }}>Next</Typography>
+            <ArrowForwardIcon />
+          </IconButton>
+        </Box>
     </>
   );
 };

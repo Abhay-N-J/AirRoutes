@@ -11,7 +11,6 @@ import {
   ThemeProvider as ThemeProvider2,
   createTheme as createTheme2,
 } from "@mui/material/styles";
-import MapComponent from "./Pages/Map";
 import RealtimeSearch from "./Pages/RealtimeSearch";
 
 const darkTheme = createTheme2({
@@ -36,7 +35,6 @@ function App() {
               <Route path="/" Component={Home}></Route>
               <Route path="/search" Component={Search}></Route>
               <Route path="/realtime-search" Component={RealtimeSearch}></Route>
-              <Route path="/map" Component={MapComponent}></Route>
             </Routes>
           </Router>
         </QueryClientProvider>

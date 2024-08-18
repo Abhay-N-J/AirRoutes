@@ -12,7 +12,6 @@ import {
 import LocationOn from "@mui/icons-material/LocationOn";
 import MapModal from "./MapModal";
 import { useState } from "react";
-import { pickersPopperClasses } from "@mui/x-date-pickers/internals";
 
 const RouteAccordian = (props: {
   index: number;
@@ -36,7 +35,12 @@ const RouteAccordian = (props: {
           }}
         >
           <Typography>{Array.from(props.airports).join(", ")}</Typography>
-          <Typography>{Array.from(props.airlines).map((a, i) => a.split(" ").slice(-1)).join(", ")}</Typography>
+          <Typography>{Array.from(props.airlines).map((a, i) => {
+            if (props.total_duration == 0) 
+              return a 
+            else 
+              return a.split(" ").slice(1).join(" ")
+            }).join(", ")}</Typography>
           <Typography>{" Stops: " + props.stops}</Typography>
           {props.total_duration != 0 ? <Typography>{" Total Duration: " + props.total_duration + " mins"}</Typography>: null}
         </Box>

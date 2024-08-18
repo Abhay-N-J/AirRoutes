@@ -29,6 +29,13 @@ app.get('/', async (req, res) => {
 
 app.use('/', router)
 
+app.use(async (req, res, next) => {
+    const now = new Date()
+    if (process.env.PROD !== true)
+        console.log("Returned: " + req.url + ` at ${now.toUTCString()}`)
+    next()
+})
+
 app.use((err, req, res, next) => {
     console.log(err);
     res.status(500).json({

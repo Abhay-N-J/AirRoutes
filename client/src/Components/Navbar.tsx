@@ -27,7 +27,7 @@ const Navbar = () => {
           <Link to="/search">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               {" "}
-              Search{" "}
+              Flight Routes{" "}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>
@@ -35,15 +35,7 @@ const Navbar = () => {
           <Link to="/realtime-search">
             <NavigationMenuLink className={navigationMenuTriggerStyle()}>
               {" "}
-              Realtime Search{" "}
-            </NavigationMenuLink>
-          </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link to="/map">
-            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-              {" "}
-              Map{" "}
+              Realtime Fligths{" "}
             </NavigationMenuLink>
           </Link>
         </NavigationMenuItem>

@@ -10,7 +10,7 @@ router.get('/directRoutes', directRoutes)
 
 router.post('/realtime/:src/:dst/:hops?', realtimeRoutes)
 
-// TODO: Make SSE version of this to test speed in frontend with yield in findRoutes()
-router.post('/:src/:dst/:hops?', searchRoutes)
+//experimenting with long url in get request
+router.get('/:src/:dst/:hops?', searchRoutes)
 
 export default router

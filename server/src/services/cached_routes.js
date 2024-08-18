@@ -13,7 +13,7 @@ async function cachedRoutes(srcCode, dstCode, bypass = false) {
     const redisClient = await connectToRedis()
     const cacheKey = `routes_${srcCode}_${dstCode}`
     const cacheRoutes = await redisClient.get(cacheKey)
-    
+
     if (!bypass && cacheRoutes) {
         return JSON.parse(cacheRoutes)
     } else {
